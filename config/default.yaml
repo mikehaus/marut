@@ -1,0 +1,7 @@
+patterns:
+  forbidden:
+    - "rm -rf"
+    - "rmdir"
+    - "curl " 
+    - "chown "
+    - "chmod "
