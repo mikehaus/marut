@@ -24,6 +24,7 @@ const (
 	EventShellCommand  EventType = "shell_command"
 	EventFileAccess    EventType = "file_access"
 	EventNetworkAccess EventType = "network_access"
+	EventGateResult    EventType = "gate_result" // written by janitor, not Marut
 )
 
 type Context struct {

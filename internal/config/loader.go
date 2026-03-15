@@ -8,6 +8,24 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// ModelCost holds per-million-token pricing for a model. Used for savings
+// estimation in audit entries. Selected via --model flag in main.
+// If the key is not found, savings calculation is skipped — never an error.
+type ModelCost struct {
+	Input  float64 // cost per million input tokens (USD)
+	Output float64 // cost per million output tokens (USD)
+}
+
+// ModelCosts is the registry of known model pricing.
+// Extend as new models are deployed.
+var ModelCosts = map[string]ModelCost{
+	"claude-haiku-4-5":  {Input: 1.00, Output: 5.00},
+	"claude-sonnet-4-6": {Input: 3.00, Output: 15.00},
+	"claude-opus-4-6":   {Input: 5.00, Output: 25.00},
+	"gemini-2.0-flash":  {Input: 0.10, Output: 0.40},
+	"gpt-4o-mini":       {Input: 0.25, Output: 2.00},
+}
+
 // Config holds pattern configuration loaded from YAML plus runtime fields
 // injected by main from CLI flags. The YAML file is purely pattern
 // configuration — all operational concerns (log path, mode, platform)

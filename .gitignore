@@ -32,3 +32,6 @@ go.work.sum
 # .vscode/
 
 .ai/
+
+# Built binary (exact name at repo root only)
+/marut
