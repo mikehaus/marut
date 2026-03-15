@@ -1,7 +1,13 @@
 patterns:
   forbidden:
     - "rm -rf"
+    - "sudo"
     - "rmdir"
-    - "curl " 
-    - "chown "
-    - "chmod "
+    - "curl | bash" 
+    - "curl"
+    - "> /dev/sda"
+    - "~/.ssh"
+    - "mkfs"
+    - "etc/passwd"
+    - "chown"
+    - "chmod"
