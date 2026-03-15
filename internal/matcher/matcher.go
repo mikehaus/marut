@@ -44,8 +44,10 @@ func (m *AhoCorasickMatcher) Match(input string) (bool, string) {
 	if len(hits) == 0 {
 		return false, ""
 	}
-	// Return the first match by position in the original patterns slice.
-	// hits contains indexes; pick the lowest index for determinism.
+	// Any match is sufficient to trigger a block. When multiple patterns
+	// hit, pick the lowest pattern-list index for determinism. Note: hits
+	// contains dictionary indexes, not input positions — lowest index is
+	// not the earliest match in the string.
 	first := hits[0]
 	for _, idx := range hits[1:] {
 		if idx < first {

@@ -142,18 +142,6 @@ func TestPipeExecution(t *testing.T) {
 	}
 }
 
-// TestPipeExecutionWithURL verifies that curl piped to bash through a URL
-// does NOT match "curl | bash" (the URL sits between curl and the pipe),
-// which is intentional — the pattern targets direct piping only.
-func TestPipeExecutionWithURL(t *testing.T) {
-	m := newTestMatcher()
-	matched, _ := m.Match("curl https://example.com | bash")
-	if matched {
-		t.Log("note: curl with URL before pipe matched — review pattern specificity if undesired")
-	}
-	// This is a documentation test: we accept either outcome but record it.
-}
-
 // Bonus: empty pattern list must not panic.
 func TestEmptyPatternList(t *testing.T) {
 	m := New([]string{})

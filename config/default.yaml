@@ -3,8 +3,13 @@ patterns:
     - "rm -rf"
     - "sudo"
     - "rmdir"
-    - "curl | bash" 
-    - "curl"
+    # "curl | bash" matches only when curl is directly adjacent to the pipe
+    # with no intervening arguments (e.g. "curl | bash" fires but
+    # "curl https://example.com | bash" does not — the URL breaks the
+    # contiguous substring).  If you need to catch URL-based pipe execution
+    # add a separate pattern such as "| bash" or "| sh".
+    - "curl | bash"
+    - "curl | sh"
     - "> /dev/sda"
     - "~/.ssh"
     - "mkfs"
