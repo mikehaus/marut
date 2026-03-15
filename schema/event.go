@@ -50,7 +50,8 @@ type Outcome struct {
 }
 
 type AuditEntry struct {
-	Timestamp string  `json:"timestamp"`
+	UID       string  `json:"uid"`       // ULID — sortable, unique, generated at write time
+	Timestamp string  `json:"timestamp"` // ISO8601 — human readable
 	Level     Level   `json:"level"`
 	AgentID   string  `json:"agent_id"`
 	PID       int     `json:"pid"`
