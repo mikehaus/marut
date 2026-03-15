@@ -65,16 +65,18 @@ func (l *Logger) WriteSIMRaw(raw []byte) error {
 	}
 	defer f.Close()
 
-	if _, err := fmt.Fprintf(f, "SIM_RAW:%s\n", raw); err != nil {
+	if _, err := fmt.Fprintf(f, "SIM_RAW: %s\n", raw); err != nil {
 		return fmt.Errorf("logger: write sim raw %s: %w", l.path, err)
 	}
 	return nil
 }
 
 // newULID generates a ULID using the provided time and a cryptographically
-// random entropy source. Panics only if the system entropy source fails,
-// which is unrecoverable in any case.
+// random entropy source read directly — no monotonic wrapper. Marut exits
+// after each write so sub-millisecond ordering within a single process is
+// not needed, and skipping Monotonic avoids its panic-on-overflow edge case
+// (2^80 increments within one millisecond, techincally possible unlikely in practice). MustNew panics only if the
+// system entropy source fails, which is unrecoverable in any case.
 func newULID(t time.Time) string {
-	entropy := ulid.Monotonic(rand.Reader, 0)
-	return ulid.MustNew(ulid.Timestamp(t), entropy).String()
+	return ulid.MustNew(ulid.Timestamp(t), rand.Reader).String()
 }
