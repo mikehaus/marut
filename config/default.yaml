@@ -1,18 +1,42 @@
 patterns:
-  forbidden:
-    - "rm -rf"
-    - "sudo"
-    - "rmdir"
-    # "curl | bash" matches only when curl is directly adjacent to the pipe
-    # with no intervening arguments (e.g. "curl | bash" fires but
-    # "curl https://example.com | bash" does not — the URL breaks the
-    # contiguous substring).  If you need to catch URL-based pipe execution
-    # add a separate pattern such as "| bash" or "| sh".
-    - "curl | bash"
-    - "curl | sh"
-    - "> /dev/sda"
-    - "~/.ssh"
-    - "mkfs"
-    - "etc/passwd"
-    - "chown"
-    - "chmod"
+  # Destructive filesystem
+  - "rm -rf /"
+  - "rm -rf ~"
+  - "rm -rf $home"
+  - "> /dev/sda"
+  - "mkfs"
+  - "dd if="
+  # Credential files
+  - "~/.ssh"
+  - "/.ssh/id_"
+  - ".env"
+  - ".pem"
+  - ".key"
+  # Privilege escalation
+  - "sudo su"
+  - "sudo -i"
+  - "chmod 777 /"
+  - "/etc/passwd"
+  - "/etc/shadow"
+  # Pipe execution
+  # Note: matches only when curl/wget is directly adjacent to the pipe with no
+  # intervening arguments. "curl https://example.com | bash" does NOT match —
+  # the URL breaks the contiguous substring. Add "| bash" or "| sh" as separate
+  # patterns if you need to catch URL-based pipe execution.
+  - "curl | bash"
+  - "curl | sh"
+  - "wget | bash"
+  - "wget | sh"
+  # Exfiltration
+  - "ngrok"
+  - "serveo.net"
+
+monitor_phrases:
+  - "oops"
+  - "sorry"
+  - "whoops"
+  - "my mistake"
+  - "i apologize"
+  - "i made an error"
+  - "that was wrong"
+  - "let me try again"

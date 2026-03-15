@@ -18,101 +18,76 @@ func writeTempYAML(t *testing.T, content string) string {
 }
 
 func TestLoad_ValidConfig(t *testing.T) {
-	yaml := `
+	path := writeTempYAML(t, `
 patterns:
-  forbidden:
-    - "rm -rf"
-    - "sudo"
-mode: enforcement
-log_path: /tmp/audit.log
-`
-	cfg, err := Load(writeTempYAML(t, yaml))
+  - "rm -rf /"
+  - "sudo su"
+`)
+	cfg, err := Load(path)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
 	if len(cfg.Patterns) != 2 {
 		t.Fatalf("expected 2 patterns, got %d", len(cfg.Patterns))
 	}
-	if cfg.Patterns[0] != "rm -rf" {
-		t.Errorf("expected first pattern %q, got %q", "rm -rf", cfg.Patterns[0])
-	}
-	if cfg.Mode != ModeDefault {
-		t.Errorf("expected mode %q, got %q", ModeEnforcement, cfg.Mode)
-	}
-	if cfg.LogPath != "/tmp/audit.log" {
-		t.Errorf("expected log_path %q, got %q", "/tmp/audit.log", cfg.LogPath)
+	if cfg.Patterns[0] != "rm -rf /" {
+		t.Errorf("expected first pattern %q, got %q", "rm -rf /", cfg.Patterns[0])
 	}
 }
 
-func TestLoad_DefaultsEmptyModeToEnforcement(t *testing.T) {
-	yaml := `
+func TestLoad_WithMonitorPhrases(t *testing.T) {
+	path := writeTempYAML(t, `
 patterns:
-  forbidden:
-    - "rm -rf"
-`
-	cfg, err := Load(writeTempYAML(t, yaml))
+  - "rm -rf /"
+monitor_phrases:
+  - "oops"
+  - "my mistake"
+`)
+	cfg, err := Load(path)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
-	if cfg.Mode != ModeEnforcement {
-		t.Errorf("expected mode to default to %q, got %q", ModeEnforcement, cfg.Mode)
+	if len(cfg.MonitorPhrases) != 2 {
+		t.Fatalf("expected 2 monitor phrases, got %d", len(cfg.MonitorPhrases))
+	}
+	if cfg.MonitorPhrases[0] != "oops" {
+		t.Errorf("expected first monitor phrase %q, got %q", "oops", cfg.MonitorPhrases[0])
 	}
 }
 
-func TestLoad_SimMode(t *testing.T) {
-	yaml := `
+func TestLoad_MonitorPhrasesOptional(t *testing.T) {
+	path := writeTempYAML(t, `
 patterns:
-  forbidden:
-    - "sudo"
-mode: sim
-`
-	cfg, err := Load(writeTempYAML(t, yaml))
+  - "rm -rf /"
+`)
+	cfg, err := Load(path)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
-	if cfg.Mode != ModeSim {
-		t.Errorf("expected mode %q, got %q", ModeSim, cfg.Mode)
-	}
-}
-
-func TestLoad_InvalidMode(t *testing.T) {
-	yaml := `
-patterns:
-  forbidden:
-    - "rm -rf"
-mode: yolo
-`
-	_, err := Load(writeTempYAML(t, yaml))
-	if err == nil {
-		t.Fatal("expected validation error for invalid mode, got nil")
-	}
-	if !strings.Contains(err.Error(), "invalid mode") {
-		t.Errorf("expected error to mention invalid mode, got: %v", err)
+	if cfg.MonitorPhrases != nil {
+		t.Errorf("expected MonitorPhrases to be nil when absent, got %v", cfg.MonitorPhrases)
 	}
 }
 
 func TestLoad_EmptyPatterns(t *testing.T) {
-	yaml := `
-patterns:
-  forbidden: []
-`
-	_, err := Load(writeTempYAML(t, yaml))
+	path := writeTempYAML(t, `
+patterns: []
+`)
+	_, err := Load(path)
 	if err == nil {
 		t.Fatal("expected validation error for empty patterns, got nil")
 	}
 	if !strings.Contains(err.Error(), "empty") {
-		t.Errorf("expected error to mention empty patterns, got: %v", err)
+		t.Errorf("expected error to mention empty, got: %v", err)
 	}
 }
 
 func TestLoad_MissingPatternsKey(t *testing.T) {
-	yaml := `
-mode: enforcement
-`
-	_, err := Load(writeTempYAML(t, yaml))
+	path := writeTempYAML(t, `
+monitor_phrases:
+  - "oops"
+`)
+	_, err := Load(path)
 	if err == nil {
 		t.Fatal("expected validation error for missing patterns, got nil")
 	}
@@ -140,21 +115,20 @@ func TestLoad_InvalidYAML(t *testing.T) {
 }
 
 func TestLoad_RuntimeFieldsNotSetFromYAML(t *testing.T) {
-	yaml := `
+	// Runtime fields have no yaml tags — confirm they are never populated
+	// from the file regardless of what keys appear in it.
+	path := writeTempYAML(t, `
 patterns:
-  forbidden:
-    - "rm -rf"
+  - "rm -rf /"
 agent_id: "should-be-ignored"
 sid: "should-be-ignored"
 agent_seq: 99
 kill_agent: true
-`
-	cfg, err := Load(writeTempYAML(t, yaml))
+`)
+	cfg, err := Load(path)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-
-	// Runtime fields should remain at zero values since they have yaml:"-".
 	if cfg.AgentID != "" {
 		t.Errorf("expected AgentID to be empty, got %q", cfg.AgentID)
 	}
@@ -169,39 +143,20 @@ kill_agent: true
 	}
 }
 
-func TestLoadDefault_WithDefaultYAML(t *testing.T) {
-	// LoadDefault uses a relative path, so we need to run from project root.
-	// Change to project root for this test.
-	origDir, err := os.Getwd()
+func TestLoad_ModeAndLogPathIgnoredIfPresent(t *testing.T) {
+	// Confirm that stale YAML files containing mode or log_path fields
+	// load without error — those keys are simply ignored by the parser.
+	path := writeTempYAML(t, `
+patterns:
+  - "rm -rf /"
+mode: enforcement
+log_path: /tmp/audit.log
+`)
+	cfg, err := Load(path)
 	if err != nil {
-		t.Fatalf("getting working dir: %v", err)
+		t.Fatalf("unexpected error loading yaml with legacy fields: %v", err)
 	}
-
-	// Walk up from internal/config to project root.
-	projectRoot := filepath.Join(origDir, "..", "..")
-	if err := os.Chdir(projectRoot); err != nil {
-		t.Fatalf("changing to project root: %v", err)
-	}
-	t.Cleanup(func() { os.Chdir(origDir) })
-
-	cfg, err := LoadDefault()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if len(cfg.Patterns) == 0 {
-		t.Fatal("expected patterns to be populated from default.yaml")
-	}
-
-	// Check a known pattern from config/default.yaml.
-	found := false
-	for _, p := range cfg.Patterns {
-		if p == "rm -rf" {
-			found = true
-			break
-		}
-	}
-	if !found {
-		t.Errorf("expected 'rm -rf' in patterns, got: %v", cfg.Patterns)
+	if len(cfg.Patterns) != 1 {
+		t.Fatalf("expected 1 pattern, got %d", len(cfg.Patterns))
 	}
 }

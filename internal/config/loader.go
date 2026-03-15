@@ -8,41 +8,38 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	ModeEnforcement = "enforcement"
-	ModeSim         = "sim"
-	ModeDefault     = ModeEnforcement
-)
-
-// Config holds both file-sourced configuration (patterns, mode, log path)
-// and runtime fields set by the orchestrator (agent identity, kill switch).
+// Config holds pattern configuration loaded from YAML plus runtime fields
+// injected by main from CLI flags. The YAML file is purely pattern
+// configuration — all operational concerns (log path, mode, platform)
+// are CLI flags and never appear here.
 type Config struct {
-	// YAML config Values
-	Patterns []string `yaml:"-"`
-	Mode     string   `yaml:"mode"`
-	LogPath  string   `yaml:"log_path"`
+	// From YAML
+	Patterns       []string
+	MonitorPhrases []string
 
-	// Runtime orchestratory values
-	KillAgent bool   `yaml:"-"`
-	AgentID   string `yaml:"-"`
-	SID       string `yaml:"-"`
-	AgentSeq  int    `yaml:"-"`
+	// Runtime — set by main from CLI flags, never from YAML
+	KillAgent bool
+	AgentID   string
+	SID       string
+	AgentSeq  int
 }
 
-// configFile mirrors the nested YAML structure in config/default.yaml:
+// configFile mirrors the YAML structure on disk:
 //
 //	patterns:
-//	  forbidden:
-//	    - "rm -rf"
-//	    - ...
+//	  - "rm -rf /"
+//	  - ...
+//	monitor_phrases:
+//	  - "oops"
+//	  - ...
 type configFile struct {
-	Patterns struct {
-		Forbidden []string `yaml:"forbidden"`
-	} `yaml:"patterns"`
-	Mode    string `yaml:"mode"`
-	LogPath string `yaml:"log_path"`
+	Patterns       []string `yaml:"patterns"`
+	MonitorPhrases []string `yaml:"monitor_phrases"`
 }
 
+// Load reads and parses the YAML file at path, returning a validated Config.
+// There is no default path — if --config is not provided, main should exit 1
+// with a message directing the user to supply --config.
 func Load(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -55,34 +52,20 @@ func Load(path string) (*Config, error) {
 	}
 
 	cfg := &Config{
-		Patterns: raw.Patterns.Forbidden,
-		Mode:     raw.Mode,
-		LogPath:  raw.LogPath,
+		Patterns:       raw.Patterns,
+		MonitorPhrases: raw.MonitorPhrases,
 	}
 
-	if err := cfg.Validate(); err != nil {
+	if err := cfg.validate(); err != nil {
 		return nil, fmt.Errorf("validating config file %s: %w", path, err)
 	}
 
 	return cfg, nil
 }
 
-func LoadDefault() (*Config, error) {
-	return Load("config/default.yaml")
-}
-
-func (c *Config) Validate() error {
+func (c *Config) validate() error {
 	if len(c.Patterns) == 0 {
-		return errors.New("config: forbidden patterns list is empty")
+		return errors.New("config: patterns list is empty")
 	}
-
-	if c.Mode == "" {
-		c.Mode = ModeDefault
-	}
-
-	if c.Mode != ModeDefault && c.Mode != ModeSim {
-		return fmt.Errorf("config: invalid mode %q (must be %q or %q)", c.Mode, ModeEnforcement, ModeSim)
-	}
-
 	return nil
 }
