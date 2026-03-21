@@ -35,3 +35,4 @@ go.work.sum
 
 # Built binary (exact name at repo root only)
 /marut
+audit.log
