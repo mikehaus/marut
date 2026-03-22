@@ -1,0 +1,15 @@
+{
+  "name": "marut-claudecode-plugin",
+  "version": "0.1.0",
+  "description": "Claude Code plugin shim for Marut",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -f index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.0.0"
+  }
+}

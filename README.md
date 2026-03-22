@@ -16,7 +16,7 @@ Marut reads a tool call from stdin, checks it against a pattern list, writes an 
 - **Exit 1:** Internal error (bad config, malformed payload)
 - **Exit 2:** Command is forbidden, block execution
 
-Latency: **~0.2ms** on pattern sets with 20-30 entries. Measured in production.
+Latency: **~0.2ms** on pattern sets with 20-30 entries.
 
 ---
 
@@ -55,7 +55,7 @@ Marut is stateless. No daemon. No persistent state. Each invocation is independe
 ### Prerequisites
 
 - Go 1.23+
-- Node.js / Bun (for OpenCode plugin)
+- Node.js (for plugins)
 - OpenCode or Claude Code
 
 ### Quick Start
@@ -65,27 +65,38 @@ Marut is stateless. No daemon. No persistent state. Each invocation is independe
 git clone https://github.com/yourhandle/marut.git
 cd marut
 
-# Build and install marut binary
-make install
+# Build marut binary
+make build
 
-# Install OpenCode plugin (project-local)
-make install-plugin
+# Install for OpenCode
+make install-plugin  # or: make install-global for all sessions
 
-# Set environment variables
+# Install for Claude Code
+make build-claude-plugin  # (no separate install step needed)
+```
+
+### Platform-Specific Usage
+
+#### OpenCode
+
+Set environment variables and run OpenCode:
+
+```bash
 export MARUT_BIN="$(pwd)/marut"
 export MARUT_ARGS="--config $(pwd)/config/default.yaml --log $(pwd)/audit.log"
-
-# Start OpenCode
 opencode
 ```
 
-For global installation (all OpenCode sessions):
+#### Claude Code
+
+Start Claude Code with the plugin directory:
 
 ```bash
-make install-global
-export MARUT_BIN="marut"
-export MARUT_ARGS="--config /path/to/your/config.yaml --log /path/to/audit.log"
+cd ~/Dev/projects/go/test  # or any project directory
+claude --plugin-dir ~/path/to/marut/claudecode-plugin
 ```
+
+The wrapper script (`claudecode-plugin/marut-wrapper.sh`) automatically configures paths using sensible defaults.
 
 ---
 
@@ -207,7 +218,8 @@ marut/
     logger/audit.go          # NDJSON audit logger
     cli/entrypoint.go        # Shared logic (BuildEntry, EventType)
   schema/event.go            # AuditEntry types
-  opencode-plugin/index.ts  # OpenCode TypeScript shim
+  opencode-plugin/           # OpenCode TypeScript shim
+  claudecode-plugin/         # Claude Code plugin shim
   config/default.yaml        # Default forbidden patterns
 ```
 
@@ -225,7 +237,11 @@ Marut uses [Cloudflare's Aho-Corasick](https://github.com/cloudflare/ahocorasick
 
 This prevents trivial bypasses like `"rm" '-rf' '~/.ssh'`.
 
-### 2. OpenCode Plugin
+### 2. Plugin Shims
+
+Marut uses platform-specific plugins to intercept tool calls:
+
+#### OpenCode Plugin
 
 The TypeScript shim (`opencode-plugin/index.ts`) hooks into OpenCode's `tool.execute.before` event:
 
@@ -244,7 +260,19 @@ The TypeScript shim (`opencode-plugin/index.ts`) hooks into OpenCode's `tool.exe
 }
 ```
 
-If marut exits 2, the plugin throws and OpenCode never executes the command.
+#### Claude Code Plugin
+
+The Claude Code plugin (`claudecode-plugin/`) uses command hooks defined in `hooks/hooks.json`:
+
+```bash
+# Claude Code sends JSON to stdin
+PreToolUse event → marut-wrapper.sh → marut binary → exit code
+```
+
+The wrapper script (`marut-wrapper.sh`) pipes Claude Code's hook payload to marut and maps exit codes:
+- Exit 0 → Allow execution
+- Exit 2 → Block (shows error to Claude)
+- Exit 1 → Internal error
 
 ### 3. Audit Trail
 
@@ -278,7 +306,6 @@ Every tool call is logged to `audit.log` as NDJSON. Use this for:
 ### Specific Limitations
 
 - **Pattern specificity:** `"curl | bash"` only matches when `curl` is directly adjacent to `|`. Use `"| bash"` for broader coverage.
-- **OpenCode only:** Claude Code normalizer is implemented in the binary, but no plugin shim exists yet. Use `--platform claudecode` if invoking marut directly.
 - **Monitor mode unimplemented:** Flag exists but phrase matching and rolling count logic are not wired (Block 11). Use `--mode validate` only.
 
 ### Defense in Depth
@@ -297,7 +324,7 @@ Marut is one layer. For production deployments or defense against adversaries, a
 
 - [ ] **Monitor mode:** Hallucination phrase tracking with rolling count and threshold-based warnings (flag exists, logic unimplemented)
 - [ ] **Cost estimation:** Populate `savings` field in audit log with estimated tokens/cost saved per block (flag and pricing map exist, calculation not wired)
-- [ ] **Claude Code plugin shim:** TypeScript hook for Claude Code (binary normalizer exists, plugin shim not yet written)
+- [x] **Claude Code plugin shim:** Plugin shim for Claude Code ([`claudecode-plugin/`](./claudecode-plugin/))
 
 ---
 

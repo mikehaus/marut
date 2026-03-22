@@ -1,0 +1,6 @@
+index.js
+index.d.ts
+index.js.map
+*.tsbuildinfo
+node_modules/
+package-lock.json

@@ -36,3 +36,9 @@ go.work.sum
 # Built binary (exact name at repo root only)
 /marut
 audit.log
+
+# Plugin directories have their own .gitignore files
+# Only ignore local plugin cache directories here
+.claude/
+.claudecode/
+.opencode/

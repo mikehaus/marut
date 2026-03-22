@@ -1,0 +1,11 @@
+{
+  "name": "marut",
+  "version": "0.1.0",
+  "description": "Security validation and audit logging for Claude Code tool usage",
+  "author": {
+    "name": "Mike Hollingshaus"
+  },
+  "homepage": "https://github.com/mikehaus/marut",
+  "license": "MIT",
+  "keywords": ["security", "validation", "audit", "compliance"]
+}

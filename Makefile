@@ -1,4 +1,4 @@
-.PHONY: build install install-plugin install-global clean test
+.PHONY: build install install-plugin install-global build-claude-plugin clean test
 
 # Build the marut binary
 build:
@@ -36,11 +36,26 @@ install-global: build
 	@echo "  export MARUT_BIN=\"marut\""
 	@echo "  export MARUT_ARGS=\"--config /path/to/config.yaml --log /path/to/audit.log\""
 
+# Build Claude Code plugin (use with --plugin-dir or plugin install)
+build-claude-plugin: build
+	@echo "Building Claude Code plugin..."
+	cd claudecode-plugin && npm install && npm run build
+	@echo "✓ Claude Code plugin built"
+	@echo ""
+	@echo "To use the plugin, either:"
+	@echo "  1. Test with: claude --plugin-dir ./claudecode-plugin"
+	@echo "  2. Install with: claude plugin install ./claudecode-plugin --scope user"
+	@echo ""
+	@echo "Set environment variables before running:"
+	@echo "  export MARUT_BIN=\"$$(pwd)/marut\""
+	@echo "  export MARUT_ARGS=\"--config $$(pwd)/config/default.yaml --log $$(pwd)/audit.log\""
+
 # Clean build artifacts
 clean:
 	rm -f marut
 	rm -f audit.log
 	cd opencode-plugin && npm run clean
+	cd claudecode-plugin && npm run clean
 
 # Run tests
 test:
