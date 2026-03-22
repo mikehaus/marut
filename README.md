@@ -62,7 +62,7 @@ Marut is stateless. No daemon. No persistent state. Each invocation is independe
 
 ```bash
 # Clone the repo
-git clone https://github.com/yourhandle/marut.git
+git clone https://github.com/mikehaus/marut.git
 cd marut
 
 # Build marut binary
@@ -324,13 +324,14 @@ Marut is one layer. For production deployments or defense against adversaries, a
 
 - [ ] **Monitor mode:** Hallucination phrase tracking with rolling count and threshold-based warnings (flag exists, logic unimplemented)
 - [ ] **Cost estimation:** Populate `savings` field in audit log with estimated tokens/cost saved per block (flag and pricing map exist, calculation not wired)
-- [x] **Claude Code plugin shim:** Plugin shim for Claude Code ([`claudecode-plugin/`](./claudecode-plugin/))
 
 ---
 
 ## License
 
-MIT
+**MIT License** - See [LICENSE](LICENSE)
+
+*Marut was built by a solo developer to make autonomous coding agents safer to run while grabbing a coffee.*
 
 ---
 
