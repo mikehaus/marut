@@ -68,41 +68,73 @@ cd marut
 # Build marut binary
 make build
 
-# Install for OpenCode
-make install-plugin  # or: make install-global for all sessions
-
-# Install for Claude Code
-make build-claude-plugin  # (no separate install step needed)
+# Install for your tool of choice
+make install-opencode-global
+# OR
+make install-claude-global
 ```
 
-### Platform-Specific Usage
+### Install Targets
+
+| Target | Platform | Scope |
+|--------|----------|-------|
+| `make install-opencode-global` | OpenCode | All sessions (recommended) |
+| `make install-opencode-local [DIR=~/myproject]` | OpenCode | One project directory |
+| `make install-claude-global` | Claude Code | All sessions (recommended) |
+| `make install-claude-local [DIR=~/myproject]` | Claude Code | One project directory |
+| `make uninstall-opencode-global` | OpenCode | Remove global |
+| `make uninstall-opencode-local [DIR=~/myproject]` | OpenCode | Remove from project |
+| `make uninstall-claude-global` | Claude Code | Remove global |
+| `make uninstall-claude-local [DIR=~/myproject]` | Claude Code | Remove from project |
+
+Local installs default to the current directory if `DIR` is not specified.
+
+### Environment Variables
+
+Both platforms use the same env vars. Add to your `~/.zshrc` (or `~/.bashrc`):
+
+```bash
+export MARUT_BIN="/path/to/marut/marut"
+export MARUT_CONFIG="/path/to/marut/config/default.yaml"
+export MARUT_LOG="/path/to/marut/audit.log"
+
+# Optional — for orchestrators passing per-session flags.
+# Keep to short flags only (--sim, --agent-id, --sid, etc.).
+# Do NOT put --config, --log, or --platform here.
+# export MARUT_ARGS="--agent-id myagent --sid mysession"
+```
+
+> **Note:** Both OpenCode and Claude Code launch as subprocesses and do not inherit env vars set inline in the terminal. These must be in your shell profile.
+
+Then reload your shell and install:
+
+```bash
+source ~/.zshrc
+cd /path/to/marut
+```
 
 #### OpenCode
 
-Set environment variables and run OpenCode:
-
 ```bash
-export MARUT_BIN="$(pwd)/marut"
-export MARUT_ARGS="--config $(pwd)/config/default.yaml --log $(pwd)/audit.log"
-opencode
+make install-opencode-global              # all sessions
+make install-opencode-local DIR=~/myproject  # one project only
 ```
 
 #### Claude Code
 
-Start Claude Code with the plugin directory:
-
 ```bash
-cd ~/Dev/projects/go/test  # or any project directory
-claude --plugin-dir ~/path/to/marut/claudecode-plugin
+make install-claude-global                # all sessions
+make install-claude-local DIR=~/myproject # one project only
 ```
-
-The wrapper script (`claudecode-plugin/marut-wrapper.sh`) automatically configures paths using sensible defaults.
 
 ---
 
 ## Configuration
 
 Marut uses a YAML file to define forbidden patterns and monitor phrases.
+
+**The defaults are a starting point.** Extend the pattern list for your 
+specific codebase before running agents autonomously.
 
 **`config/default.yaml`:**
 
@@ -119,6 +151,7 @@ patterns:
   - "curl | bash"
   - "wget | sh"
 
+# Experimental and WIP for now
 monitor_phrases:
   - "oops"
   - "sorry"
@@ -136,7 +169,7 @@ Pattern matching is **case-insensitive** and **strips quotes/whitespace**. See `
 --log          path to audit.log (default: ./audit.log)
 --platform     opencode | claudecode (default: opencode)
 --mode         validate | monitor (default: validate, monitor is unimplemented)
---sim          SIM mode: log everything, never block
+--sim          SIM mode: log everything, never block. Run this first to tune your pattern list before enforcing. 
 --kill-agent   on match, SIGTERM the parent process
 --agent-id     agent identifier (default: "default")
 --sid          tmux session id (default: "none")

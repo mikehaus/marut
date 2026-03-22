@@ -2,8 +2,6 @@
 // Licensed under the MIT License
 // See https://github.com/mikehollingshaus/marut/blob/main/LICENSE
 
-#!/usr/bin/env node
-
 /**
  * Marut hook wrapper for Claude Code
  * 

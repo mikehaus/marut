@@ -27,6 +27,9 @@ const (
 	exitBlocked = 2
 )
 
+// create max 10MB threshold to prevent arbitrarily large toolcall from exhausting memory
+const maxInputBytes = 10 * 1024 * 1024
+
 func main() {
 	os.Exit(run())
 }
@@ -95,18 +98,20 @@ func run() int {
 	}
 	norm := normalizers[*platform]
 
-	// --- Logger ---
 	log, err := logger.New(*logPath, *sim)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		return exitError
 	}
 
-	// --- Read stdin ---
-	rawBytes, err := io.ReadAll(os.Stdin)
+	rawBytes, err := io.ReadAll(io.LimitReader(os.Stdin, maxInputBytes+1))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: reading stdin: %v\n", err)
 		return exitError
+	}
+	if len(rawBytes) > maxInputBytes {
+		fmt.Fprintf(os.Stderr, "error: input exceeds maximum size of %d bytes\n", maxInputBytes)
+		return exitBlocked
 	}
 
 	// --- SIM mode: log raw bytes and a SIM entry, then exit 0 ---
