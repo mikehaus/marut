@@ -1,7 +1,3 @@
-// Copyright (c) 2026 Mike Hollingshaus
-// Licensed under the MIT License
-// See https://github.com/mikehollingshaus/marut/blob/main/LICENSE
-
 package main
 
 import (
@@ -131,8 +127,8 @@ func run() int {
 	}
 
 	// --- Match ---
-	start := time.Now()
 	m := matcher.New(cfg.Patterns)
+	start := time.Now()
 	matched, pattern := m.Match(tc.RawInput)
 	latencyMs := float64(time.Since(start).Nanoseconds()) / 1e6
 

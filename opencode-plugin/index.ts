@@ -1,7 +1,3 @@
-// Copyright (c) 2026 Mike Hollingshaus
-// Licensed under the MIT License
-// See https://github.com/mikehollingshaus/marut/blob/main/LICENSE
-
 import { spawn } from "child_process";
 
 const MARUT_BIN = process.env.MARUT_BIN ?? "marut";

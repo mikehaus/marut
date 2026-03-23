@@ -1,7 +1,3 @@
-// Copyright (c) 2026 Mike Hollingshaus
-// Licensed under the MIT License
-// See https://github.com/mikehollingshaus/marut/blob/main/LICENSE
-
 /**
  * Marut hook wrapper for Claude Code
  * 

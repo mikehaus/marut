@@ -1,8 +1,4 @@
 #!/bin/bash
-# Copyright (c) 2026 Mike Hollingshaus
-# Licensed under the MIT License
-# See https://github.com/mikehollingshaus/marut/blob/main/LICENSE
-
 # Wrapper script for marut that sets paths explicitly
 # This ensures the hook works even if environment variables aren't passed through
 

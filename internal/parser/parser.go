@@ -1,7 +1,3 @@
-// Copyright (c) 2026 Mike Hollingshaus
-// Licensed under the MIT License
-// See https://github.com/mikehollingshaus/marut/blob/main/LICENSE
-
 package parser
 
 // ToolCall is the platform-agnostic representation of an intercepted tool call.

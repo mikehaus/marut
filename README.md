@@ -4,7 +4,7 @@ A sub-millisecond security layer for AI agents. No LLM in the loop.
 
 **Marut** intercepts tool calls from autonomous coding agents (OpenCode, Claude Code), runs Aho-Corasick pattern matching against a configurable forbidden-words list, emits structured audit logs, and blocks dangerous commands before they execute.
 
-**TL;DR:** Marut is a pre-call hook that kills agents before they can run `rm -rf ~/.ssh`.
+**TL;DR:** Marut is a pre-call hook that stops agents before they can run `rm -rf ~/.ssh`.
 
 ---
 
@@ -50,6 +50,16 @@ Marut is stateless. No daemon. No persistent state. Each invocation is independe
 
 ---
 
+## Privacy
+
+Marut is local-only by design.
+
+- **Zero network calls:** No telemetry, no analytics, no update checks, no cloud dependency
+- **Single static binary:** No runtime dependencies
+- **All data on-disk:** Audit logs and config are local files you control
+
+---
+
 ## Installation
 
 ### Prerequisites
@@ -91,7 +101,7 @@ Local installs default to the current directory if `DIR` is not specified.
 
 ### Environment Variables
 
-Both platforms use the same env vars. Add to your `~/.zshrc` (or `~/.bashrc`):
+Both platforms use the same env vars. Add to your `~/.zshenv` (or `~/.bashrc`/`~/.zshrc`):
 
 ```bash
 export MARUT_BIN="/path/to/marut/marut"
@@ -150,12 +160,6 @@ patterns:
   # Pipe execution
   - "curl | bash"
   - "wget | sh"
-
-# Experimental and WIP for now
-monitor_phrases:
-  - "oops"
-  - "sorry"
-  - "my mistake"
 ```
 
 Pattern matching is **case-insensitive** and **strips quotes/whitespace**. See `internal/matcher/matcher.go` for normalization logic.
@@ -328,6 +332,8 @@ Every tool call is logged to `audit.log` as NDJSON. Use this for:
 - Accidental damage: agents hallucinating destructive commands
 - Known-bad patterns: `rm -rf /`, `curl | bash`, `~/.ssh` access
 
+Update the policy `yaml` file to add your own patterns.
+
 ### What Marut Does Not Block
 
 - **Advanced obfuscation:** Base64 encoding, command substitution (`$(echo rm)`, backticks), hex escapes
@@ -356,7 +362,7 @@ Marut is one layer. For production deployments or defense against adversaries, a
 ## Roadmap
 
 - [ ] **Monitor mode:** Hallucination phrase tracking with rolling count and threshold-based warnings (flag exists, logic unimplemented)
-- [ ] **Cost estimation:** Populate `savings` field in audit log with estimated tokens/cost saved per block (flag and pricing map exist, calculation not wired)
+- [ ] **Cost estimation:** Populate `savings` field in audit log with estimated tokens/cost saved per block (flag and temp pricing map exist, calculation not wired)
 
 ---
 
