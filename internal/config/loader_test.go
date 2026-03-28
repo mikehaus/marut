@@ -35,40 +35,6 @@ patterns:
 	}
 }
 
-func TestLoad_WithMonitorPhrases(t *testing.T) {
-	path := writeTempYAML(t, `
-patterns:
-  - "rm -rf /"
-monitor_phrases:
-  - "oops"
-  - "my mistake"
-`)
-	cfg, err := Load(path)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if len(cfg.MonitorPhrases) != 2 {
-		t.Fatalf("expected 2 monitor phrases, got %d", len(cfg.MonitorPhrases))
-	}
-	if cfg.MonitorPhrases[0] != "oops" {
-		t.Errorf("expected first monitor phrase %q, got %q", "oops", cfg.MonitorPhrases[0])
-	}
-}
-
-func TestLoad_MonitorPhrasesOptional(t *testing.T) {
-	path := writeTempYAML(t, `
-patterns:
-  - "rm -rf /"
-`)
-	cfg, err := Load(path)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if cfg.MonitorPhrases != nil {
-		t.Errorf("expected MonitorPhrases to be nil when absent, got %v", cfg.MonitorPhrases)
-	}
-}
-
 func TestLoad_EmptyPatterns(t *testing.T) {
 	path := writeTempYAML(t, `
 patterns: []
@@ -84,8 +50,6 @@ patterns: []
 
 func TestLoad_MissingPatternsKey(t *testing.T) {
 	path := writeTempYAML(t, `
-monitor_phrases:
-  - "oops"
 `)
 	_, err := Load(path)
 	if err == nil {
@@ -144,12 +108,11 @@ kill_agent: true
 }
 
 func TestLoad_ModeAndLogPathIgnoredIfPresent(t *testing.T) {
-	// Confirm that stale YAML files containing mode or log_path fields
+	// Confirm that stale YAML files containing unknown fields like log_path
 	// load without error — those keys are simply ignored by the parser.
 	path := writeTempYAML(t, `
 patterns:
   - "rm -rf /"
-mode: enforcement
 log_path: /tmp/audit.log
 `)
 	cfg, err := Load(path)

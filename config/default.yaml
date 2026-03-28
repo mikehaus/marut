@@ -3,6 +3,8 @@ patterns:
   - "rm -rf /"
   - "rm -rf ~"
   - "rm -rf $home"
+  - "rm -rf"
+  - "rm -r"
   - "> /dev/sda"
   - "mkfs"
   - "dd if="
@@ -30,13 +32,3 @@ patterns:
   # Exfiltration
   - "ngrok"
   - "serveo.net"
-
-monitor_phrases:
-  - "oops"
-  - "sorry"
-  - "whoops"
-  - "my mistake"
-  - "i apologize"
-  - "i made an error"
-  - "that was wrong"
-  - "let me try again"

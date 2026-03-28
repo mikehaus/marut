@@ -35,23 +35,16 @@ func run() int {
 	configPath := flag.String("config", "", "path to patterns yaml (required)")
 	logPath := flag.String("log", "./audit.log", "path to audit log")
 	platform := flag.String("platform", "opencode", "platform: opencode | claudecode")
-	mode := flag.String("mode", "validate", "mode: validate | monitor")
 	sim := flag.Bool("sim", false, "SIM mode: log everything, never block")
 	killAgent := flag.Bool("kill-agent", false, "on match, SIGTERM the parent process in addition to blocking")
 	agentID := flag.String("agent-id", "default", "agent identifier")
 	sid := flag.String("sid", "none", "tmux session id")
 	agentSeq := flag.Int("agent-seq", 1, "agent attempt number on this worktree")
-	model := flag.String("model", "claude-haiku-4-5", "agent model key for cost estimation")
 	flag.Parse()
 
 	// --- Validate flags ---
 	if *configPath == "" {
 		fmt.Fprintln(os.Stderr, "error: --config is required; provide a path to a patterns yaml file")
-		return exitError
-	}
-
-	if *mode != "validate" && *mode != "monitor" {
-		fmt.Fprintf(os.Stderr, "error: --mode must be \"validate\" or \"monitor\", got %q\n", *mode)
 		return exitError
 	}
 
@@ -64,20 +57,6 @@ func run() int {
 	cfg, err := config.Load(*configPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		return exitError
-	}
-
-	// Warn if model key is unrecognised — savings calc will be skipped,
-	// but this is never a fatal error.
-	if _, ok := config.ModelCosts[*model]; !ok {
-		fmt.Fprintf(os.Stderr, "warning: unknown --model %q; savings estimation will be skipped\n", *model)
-	}
-	// model is intentionally unused beyond validation until savings is wired (stretch goal).
-	_ = model
-
-	// Guard: monitor mode with no phrases is a silent no-op.
-	if *mode == "monitor" && !*sim && len(cfg.MonitorPhrases) == 0 {
-		fmt.Fprintln(os.Stderr, "error: --mode monitor requires monitor_phrases in config; none found")
 		return exitError
 	}
 
@@ -114,7 +93,7 @@ func run() int {
 	if *sim {
 		_ = log.WriteSIMRaw(rawBytes)
 		tc, _ := norm.Normalize(rawBytes) // best-effort; ignore error in SIM
-		entry := cli.BuildEntry(cfg, tc, *mode, schema.LevelSim, schema.ActionPass, "", exitPass, 0, "sim mode")
+		entry := cli.BuildEntry(cfg, tc, schema.LevelSim, schema.ActionPass, "", exitPass, 0, "sim mode")
 		_ = log.Write(entry)
 		return exitPass
 	}
@@ -152,7 +131,7 @@ func run() int {
 		message = "allowed"
 	}
 
-	entry := cli.BuildEntry(cfg, tc, *mode, level, action, pattern, exitCode, latencyMs, message)
+	entry := cli.BuildEntry(cfg, tc, level, action, pattern, exitCode, latencyMs, message)
 
 	// --- Write audit log ---
 	if err := log.Write(entry); err != nil {

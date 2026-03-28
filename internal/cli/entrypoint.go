@@ -16,7 +16,6 @@ import (
 func BuildEntry(
 	cfg *config.Config,
 	tc parser.ToolCall,
-	mode string,
 	level schema.Level,
 	action schema.Action,
 	pattern string,
@@ -38,7 +37,6 @@ func BuildEntry(
 			Tool:         tc.Tool,
 			RawInput:     tc.RawInput,
 			MatchPattern: pattern,
-			Mode:         mode,
 		},
 		Outcome: schema.Outcome{
 			Action:    action,

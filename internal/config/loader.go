@@ -8,32 +8,13 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ModelCost holds per-million-token pricing for a model. Used for savings
-// estimation in audit entries. Selected via --model flag in main.
-// If the key is not found, savings calculation is skipped — never an error.
-type ModelCost struct {
-	Input  float64 // cost per million input tokens (USD)
-	Output float64 // cost per million output tokens (USD)
-}
-
-// ModelCosts is the registry of known model pricing.
-// Extend as new models are deployed.
-var ModelCosts = map[string]ModelCost{
-	"claude-haiku-4-5":  {Input: 1.00, Output: 5.00},
-	"claude-sonnet-4-6": {Input: 3.00, Output: 15.00},
-	"claude-opus-4-6":   {Input: 5.00, Output: 25.00},
-	"gemini-2.0-flash":  {Input: 0.10, Output: 0.40},
-	"gpt-4o-mini":       {Input: 0.25, Output: 2.00},
-}
-
 // Config holds pattern configuration loaded from YAML plus runtime fields
 // injected by main from CLI flags. The YAML file is purely pattern
-// configuration — all operational concerns (log path, mode, platform)
-// are CLI flags and never appear here.
+// configuration — all operational concerns (log path, platform) are CLI
+// flags and never appear here.
 type Config struct {
 	// From YAML
-	Patterns       []string
-	MonitorPhrases []string
+	Patterns []string
 
 	// Runtime — set by main from CLI flags, never from YAML
 	KillAgent bool
@@ -47,12 +28,8 @@ type Config struct {
 //	patterns:
 //	  - "rm -rf /"
 //	  - ...
-//	monitor_phrases:
-//	  - "oops"
-//	  - ...
 type configFile struct {
-	Patterns       []string `yaml:"patterns"`
-	MonitorPhrases []string `yaml:"monitor_phrases"`
+	Patterns []string `yaml:"patterns"`
 }
 
 // Load reads and parses the YAML file at path, returning a validated Config.
@@ -70,8 +47,7 @@ func Load(path string) (*Config, error) {
 	}
 
 	cfg := &Config{
-		Patterns:       raw.Patterns,
-		MonitorPhrases: raw.MonitorPhrases,
+		Patterns: raw.Patterns,
 	}
 
 	if err := cfg.validate(); err != nil {

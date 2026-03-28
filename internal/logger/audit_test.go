@@ -28,7 +28,6 @@ func makeEntry(level schema.Level, action schema.Action, tool, rawInput string) 
 			Type:     schema.EventShellCommand,
 			Tool:     tool,
 			RawInput: rawInput,
-			Mode:     "enforcement",
 		},
 		Outcome: schema.Outcome{
 			Action:    action,

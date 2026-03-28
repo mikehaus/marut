@@ -73,7 +73,7 @@ func baseToolCall() parser.ToolCall {
 }
 
 func TestBuildEntry_PassOutcome(t *testing.T) {
-	entry := BuildEntry(baseCfg(), baseToolCall(), "validate",
+	entry := BuildEntry(baseCfg(), baseToolCall(),
 		schema.LevelPass, schema.ActionPass, "", 0, 0.5, "allowed")
 
 	if entry.Level != schema.LevelPass {
@@ -95,7 +95,7 @@ func TestBuildEntry_DenyOutcome(t *testing.T) {
 	tc.RawInput = "rm -rf /"
 	msg := BlockMessage("rm -rf /")
 
-	entry := BuildEntry(baseCfg(), tc, "validate",
+	entry := BuildEntry(baseCfg(), tc,
 		schema.LevelDeny, schema.ActionBlock, "rm -rf /", 2, 1.2, msg)
 
 	if entry.Level != schema.LevelDeny {
@@ -116,7 +116,7 @@ func TestBuildEntry_DenyOutcome(t *testing.T) {
 }
 
 func TestBuildEntry_ContextPopulated(t *testing.T) {
-	entry := BuildEntry(baseCfg(), baseToolCall(), "validate",
+	entry := BuildEntry(baseCfg(), baseToolCall(),
 		schema.LevelPass, schema.ActionPass, "", 0, 0, "allowed")
 
 	if entry.Context.CWD != "/tmp/worktree" {
@@ -134,7 +134,7 @@ func TestBuildEntry_ContextPopulated(t *testing.T) {
 }
 
 func TestBuildEntry_EventPopulated(t *testing.T) {
-	entry := BuildEntry(baseCfg(), baseToolCall(), "monitor",
+	entry := BuildEntry(baseCfg(), baseToolCall(),
 		schema.LevelPass, schema.ActionPass, "", 0, 0, "allowed")
 
 	if entry.Event.Tool != "bash" {
@@ -142,9 +142,6 @@ func TestBuildEntry_EventPopulated(t *testing.T) {
 	}
 	if entry.Event.RawInput != "go test ./..." {
 		t.Errorf("raw_input: want %q, got %q", "go test ./...", entry.Event.RawInput)
-	}
-	if entry.Event.Mode != "monitor" {
-		t.Errorf("mode: want %q, got %q", "monitor", entry.Event.Mode)
 	}
 	if entry.Event.Type != schema.EventShellCommand {
 		t.Errorf("type: want %q, got %q", schema.EventShellCommand, entry.Event.Type)
@@ -156,7 +153,7 @@ func TestBuildEntry_FileToolEventType(t *testing.T) {
 	tc.Tool = "read"
 	tc.RawInput = "/some/file.go"
 
-	entry := BuildEntry(baseCfg(), tc, "validate",
+	entry := BuildEntry(baseCfg(), tc,
 		schema.LevelPass, schema.ActionPass, "", 0, 0, "allowed")
 
 	if entry.Event.Type != schema.EventFileAccess {
@@ -166,7 +163,7 @@ func TestBuildEntry_FileToolEventType(t *testing.T) {
 
 func TestBuildEntry_UIDAndTimestampBlank(t *testing.T) {
 	// UID and Timestamp must be blank — the logger stamps them at write time.
-	entry := BuildEntry(baseCfg(), baseToolCall(), "validate",
+	entry := BuildEntry(baseCfg(), baseToolCall(),
 		schema.LevelPass, schema.ActionPass, "", 0, 0, "allowed")
 
 	if entry.UID != "" {
@@ -178,7 +175,7 @@ func TestBuildEntry_UIDAndTimestampBlank(t *testing.T) {
 }
 
 func TestBuildEntry_SIMEntry(t *testing.T) {
-	entry := BuildEntry(baseCfg(), baseToolCall(), "validate",
+	entry := BuildEntry(baseCfg(), baseToolCall(),
 		schema.LevelSim, schema.ActionPass, "", 0, 0, "sim mode")
 
 	if entry.Level != schema.LevelSim {
